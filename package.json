@@ -1,0 +1,41 @@
+{
+  "name": "simple-oru",
+  "version": "v0.1.0",
+  "description": "The most simple optimistic rollup",
+  "main": "index.js",
+  "directories": {
+    "test": "test",
+    "contracts": "contracts"
+  },
+  "scripts": {
+    "prettier": "prettier --write 'contracts/**/*.sol' --loglevel error",
+    "build": "waffle waffle-config.json",
+    "deploy:dev": "npm run build && node build/scripts/scripts/deploy.js local",
+    "deploy:kovan": "npm run build && node build/scripts/scripts/deploy.js kovan",
+    "test": "npm run build && mocha --require ts-node/register 'test/**/*.test.ts' --parallel --timeout 5000",
+    "test:specify": "npm run build && mocha --require ts-node/register",
+    "docgen": "solidity-docgen --solc-module ./node_modules/solc -t doc-templates"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@openzeppelin/contracts": "2.5.1",
+    "@types/chai": "4.2.11",
+    "@types/mocha": "7.0.2",
+    "chai": "4.2.0",
+    "chai-as-promised": "7.1.1",
+    "dotenv": "8.2.0",
+    "ethereum-waffle": "3.2.1",
+    "ethers": "4.0.47",
+    "mocha": "8.0.1",
+    "prettier": "2.0.5",
+    "prettier-plugin-solidity": "1.0.0-alpha.54",
+    "ts-node": "8.10.2",
+    "typescript": "3.9.6"
+  },
+  "dependencies": {
+    "@types/node": "^14.0.13",
+    "eth-sig-util": "^2.5.3",
+    "solc": "^0.7.5",
+    "tslib": "^2.0.3"
+  }
+}
