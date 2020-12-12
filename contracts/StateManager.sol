@@ -5,7 +5,7 @@ import "./Rollup.sol";
 import "./DataTypes.sol";
 
 /**
- * @title Rollup
+ * @title StateManager
  */
 contract StateManager {
     bytes32 public root;

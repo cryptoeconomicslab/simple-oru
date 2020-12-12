@@ -1,6 +1,11 @@
 # rollup research
 
-the most simple optimistic rollup.
+The simplest optimistic roll-ups are easy to learn and extend.
+
+## Features
+
+- Account model
+- Anyone can deploy application
 
 ## Contracts
 
@@ -18,4 +23,4 @@ The contract to prove invalid state transition.
 
 ### StateManager
 
-The contract to recover state tree branch from state root.
+The contract to recover state from state root and proof.

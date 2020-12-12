@@ -33,11 +33,22 @@ contract FraudVerifier {
     function finalize(
         uint64 targetBlockNumber,
         bytes[] memory prevState,
+        DataTypes.BlockHeader memory prevHeader,
+        DataTypes.BlockHeader memory postHeader,
         DataTypes.InclusionProof memory previousTransaction,
         DataTypes.InclusionProof memory transaction
     ) public {
-        require(previousTransaction.index + 1 == transaction.index, "");
+        // Rollup(rollupAddress).block
+        if(prevHeader.blockNumber == postHeader.blockNumber) {
+            require(previousTransaction.index + 1 == transaction.index, "");
+        } else if(prevHeader.blockNumber + 1 == postHeader.blockNumber) {
+            require(previousTransaction.index == prevHeader.totalTransactions - 1 && transaction.index == 0, "");
+        } else {
+            assert(false);
+        }
         // check rollup tx
+        // require(veryfyHeader(prevHeader))
+        // require(veryfyHeader(postHeader))
         // require(verifyLeaf(previousTransaction))
         // require(verifyLeaf(transaction))
 
@@ -49,12 +60,29 @@ contract FraudVerifier {
         }
 
         require(prevStateManager.root() == previousTransaction.transaction.postStateRoot);
+        // recover sender from signature
+        address sender = ecrecover(keccak256(abi.encode(getTxBody(transaction.transaction))), transaction.transaction.v, transaction.transaction.r, transaction.transaction.s);
+        //abi.encode(transaction.transaction.method, prevState, transaction.transaction.data, postState)
         require(
-            StateTransitionVerifier(transaction.transaction.to).verifyStateTransition(prevState, transaction.transaction.method, transaction.transaction.data, postState)
+            StateTransitionVerifier(transaction.transaction.to).verifyStateTransition(
+                prevState,
+                sender,
+                transaction.transaction.method,
+                transaction.transaction.data,
+                postState)
         );
         // todo: the case it can not be verify state transition so far
         require(postStateManager.root() != transaction.transaction.postStateRoot);
         isFinalized = true;
         blockNumber = targetBlockNumber;
+    }
+
+    function getTxBody(DataTypes.Transaction memory tx) private returns (DataTypes.TransactionBody memory) {
+        return DataTypes.TransactionBody({
+            method: tx.method,
+            to: tx.to,
+            inputs: tx.inputs,
+            data: tx.data
+        });
     }
 }

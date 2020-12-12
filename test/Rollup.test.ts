@@ -2,8 +2,10 @@ import chai from 'chai'
 import {
   MockProvider,
   deployContract,
-  solidity
+  solidity,
+  link
 } from 'ethereum-waffle'
+import * as LinkedListLib from '../build/LinkedListLib.json'
 import * as Rollup from '../build/Rollup.json'
 import * as ethers from 'ethers'
 
@@ -15,11 +17,15 @@ describe('Rollup', () => {
   let wallets = new MockProvider().getWallets()
   let wallet = wallets[0]
   let rollup: any
+  let linkedList: any
   const root = ethers.utils.keccak256(
     ethers.utils.arrayify(ethers.constants.HashZero)
   )
 
   beforeEach(async () => {
+    linkedList = await deployContract(wallet, LinkedListLib, [])
+    link(Rollup, 'contracts/lib/LinkedList.sol:LinkedListLib', linkedList.address);
+
     rollup = await deployContract(wallet, Rollup, [
       wallet.address
     ])
