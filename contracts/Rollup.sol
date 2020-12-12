@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "./FraudVerifier.sol";
 import "./lib/LinkedList.sol";
+import "./DataTypes.sol";
 
 /**
  * @title Rollup
@@ -40,10 +41,15 @@ contract Rollup {
             currentBlock + 1 == blkNumber,
             "blkNumber should be next block"
         );
+        DataTypes.BlockHeader memory blockHeader = DataTypes.BlockHeader({
+            root: _root,
+            totalTransactions: _txs.length,
+            txHash: keccak256(abi.encode(_txs))
+        });
         blocks.push(
             blkNumber,
             true,
-            keccak256(abi.encode(_root, _txs))
+            keccak256(abi.encode(blockHeader))
         );
         currentBlock = blkNumber;
         emit BlockSubmitted(blkNumber, _root);
@@ -51,11 +57,12 @@ contract Rollup {
 
     function proveInvalidMerkleRoot(
         uint64 blkNumber,
-        bytes32 _root,
+        DataTypes.BlockHeader memory _blockHeader,
         bytes[] memory _txs
     ) public {
         // require(verifyMerkleRoot(_txs) != _root, "valid merkle root");
-        require(blocks.getData(blkNumber) == keccak256(abi.encode(_root, _txs)));
+        require(_blockHeader.txHash == keccak256(abi.encode(_txs)), "valid transactions");
+        require(blocks.getData(blkNumber) == keccak256(abi.encode(_blockHeader)), "valid block header");
         disableInvalidBlock(blkNumber);
     }
 
@@ -68,5 +75,15 @@ contract Rollup {
 
     function disableInvalidBlock(uint64 blkNumber) internal {
         blocks.remove(blkNumber);
+    }
+
+    function verifyBlockHeader(
+        DataTypes.BlockHeaderProof memory _blockHeaderProof
+    ) public returns (bool) {
+        return blocks.getData(_blockHeaderProof.blockNumber) == keccak256(abi.encode(DataTypes.BlockHeader({
+            root: _blockHeaderProof.root,
+            totalTransactions: _blockHeaderProof.totalTransactions,
+            txHash: _blockHeaderProof.txHash
+        })));
     }
 }
