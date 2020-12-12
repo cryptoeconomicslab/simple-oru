@@ -2,13 +2,12 @@ pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
 import "./DataTypes.sol";
-import "./StateTransitionVerifier.sol";
 import './lib/Math.sol';
 
 /**
  * @title SwapStateTransition
  */
-contract SwapStateTransition is StateTransitionVerifier {
+contract SwapStateTransition {
     using Math  for uint;
 
     uint public constant MINIMUM_LIQUIDITY = 10**3;
@@ -26,29 +25,11 @@ contract SwapStateTransition is StateTransitionVerifier {
         uint256 totalSupply;
     }
 
-    function verifyStateTransition(
-        bytes[] memory prevState,
-        address sender,
-        bytes32 method,
-        bytes memory params,
-        bytes32[] memory postState
-    ) public override pure returns(bool) {
-        if(method == keccak256("addLiquidity")) {
-            return addLiquidity(prevState, sender, params, postState);
-        }else if(method == keccak256("removeLiquidity")) {
-            return removeLiquidity(prevState, sender, params, postState);
-        }else if(method == keccak256("swap")) {
-            return swap(prevState, sender, params, postState);
-        }
-        return false;
-    }
-
     function addLiquidity(
         bytes[] memory prevState,
-        address sender,
         bytes memory params,
         bytes32[] memory postState
-    ) public pure returns(bool) {
+    ) public view returns(bool) {
         SwapState memory swapState = abi.decode(prevState[0], (SwapState));
         ERC20Balance memory pair1 = abi.decode(prevState[1], (ERC20Balance));
         ERC20Balance memory pair2 = abi.decode(prevState[2], (ERC20Balance));
@@ -77,20 +58,18 @@ contract SwapStateTransition is StateTransitionVerifier {
 
     function removeLiquidity(
         bytes[] memory prevState,
-        address sender,
         bytes memory params,
         bytes32[] memory postState
-    ) public pure returns(bool) {
+    ) public view returns(bool) {
         // TODO
         return true;
     }
 
     function swap(
         bytes[] memory prevState,
-        address sender,
         bytes memory params,
         bytes32[] memory postState
-    ) public pure returns(bool) {
+    ) public view returns(bool) {
         // TODO
         return true;
     }
