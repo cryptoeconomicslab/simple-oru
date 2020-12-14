@@ -3,8 +3,16 @@ pragma experimental ABIEncoderV2;
 
 library DataTypes {
     struct BlockHeader {
+        bytes32 root;
+        uint256 totalTransactions;
+        bytes32 txHash;
+    }
+
+    struct BlockHeaderProof {
+        bytes32 root;
         uint256 totalTransactions;
         uint64 blockNumber;
+        bytes32 txHash;
     }
 
     struct InclusionProof {
