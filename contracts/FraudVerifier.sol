@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 import "./Rollup.sol";
 import "./DataTypes.sol";
 import "./StateManager.sol";
-import "./StateTransitionVerifier.sol";
 
 /**
  * @title FraudVerifier
@@ -15,6 +14,7 @@ contract FraudVerifier {
     StateManager public postStateManager;
     bool public isFinalized;
     uint64 public blockNumber;
+    address public sender;
 
     constructor(address _rollupAddress) public {
         rollupAddress = _rollupAddress;
@@ -33,8 +33,8 @@ contract FraudVerifier {
     function finalize(
         uint64 targetBlockNumber,
         bytes[] memory prevState,
-        DataTypes.BlockHeader memory prevHeader,
-        DataTypes.BlockHeader memory postHeader,
+        DataTypes.BlockHeaderProof memory prevHeader,
+        DataTypes.BlockHeaderProof memory postHeader,
         DataTypes.InclusionProof memory previousTransaction,
         DataTypes.InclusionProof memory transaction
     ) public {
@@ -47,8 +47,8 @@ contract FraudVerifier {
             assert(false);
         }
         // check rollup tx
-        // require(veryfyHeader(prevHeader))
-        // require(veryfyHeader(postHeader))
+        require(Rollup(rollupAddress).verifyBlockHeader(prevHeader), "invalid prevHeader");
+        require(Rollup(rollupAddress).verifyBlockHeader(postHeader), "invalid postHeader");
         // require(verifyLeaf(previousTransaction))
         // require(verifyLeaf(transaction))
 
@@ -61,18 +61,19 @@ contract FraudVerifier {
 
         require(prevStateManager.root() == previousTransaction.transaction.postStateRoot);
         // recover sender from signature
-        address sender = ecrecover(keccak256(abi.encode(getTxBody(transaction.transaction))), transaction.transaction.v, transaction.transaction.r, transaction.transaction.s);
-        //abi.encode(transaction.transaction.method, prevState, transaction.transaction.data, postState)
-        require(
-            StateTransitionVerifier(transaction.transaction.to).verifyStateTransition(
-                prevState,
-                sender,
-                transaction.transaction.method,
-                transaction.transaction.data,
-                postState)
-        );
-        // todo: the case it can not be verify state transition so far
-        require(postStateManager.root() != transaction.transaction.postStateRoot);
+        sender = ecrecover(keccak256(abi.encode(getTxBody(transaction.transaction))), transaction.transaction.v, transaction.transaction.r, transaction.transaction.s);
+        // call function
+        (bool success,  ) = transaction.transaction.to.call(abi.encodeWithSelector(
+            transaction.transaction.method,
+            prevState,
+            transaction.transaction.data,
+            postState
+        ));
+        if(success) {
+            require(postStateManager.root() != transaction.transaction.postStateRoot);
+        } else {
+            require(previousTransaction.transaction.postStateRoot != transaction.transaction.postStateRoot);
+        }
         isFinalized = true;
         blockNumber = targetBlockNumber;
     }
