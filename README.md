@@ -5,7 +5,6 @@ The simplest optimistic roll-ups are easy to learn and extend.
 ## Features
 
 - Account model
-- Anyone can deploy application
 
 ## Contracts
 
